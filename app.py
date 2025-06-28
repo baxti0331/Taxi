@@ -15,25 +15,28 @@ clean_token = API_TOKEN.replace(':', '')
 WEBHOOK_URL_BASE = 'https://taxi-owo8.onrender.com'
 WEBHOOK_URL_PATH = f"/{clean_token}/"
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
     return "Бот запущен и готов к работе!"
 
-@app.route(WEBHOOK_URL_PATH, methods=['POST'])
+@app.route(WEBHOOK_URL_PATH, methods=['POST', 'GET'])
 def webhook():
-    if request.headers.get('content-type') == 'application/json':
-        json_string = request.get_data().decode('utf-8')
-        update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
-        return '', 200
+    if request.method == 'POST':
+        if request.headers.get('content-type') == 'application/json':
+            json_string = request.get_data().decode('utf-8')
+            update = telebot.types.Update.de_json(json_string)
+            bot.process_new_updates([update])
+            return '', 200
+        else:
+            abort(403)
     else:
-        abort(403)
+        # Для GET-запроса просто отвечаем 200 без обработки
+        return "Webhook работает!", 200
 
 # Обработчик команды /start
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     markup = InlineKeyboardMarkup()
-    # Ссылка на ваше веб-приложение
     web_app_url = "https://findly-bird.vercel.app/"  # Замените на свой URL
 
     web_app_button = InlineKeyboardButton(
