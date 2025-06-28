@@ -10,54 +10,58 @@ if not API_TOKEN:
 bot = telebot.TeleBot(API_TOKEN)
 app = Flask(__name__)
 
-# Убираем двоеточие из токена в URL пути
 clean_token = API_TOKEN.replace(':', '')
-WEBHOOK_URL_BASE = 'https://taxi-owo8.onrender.com'
-WEBHOOK_URL_PATH = f"/{clean_token}/"
+WEBHOOK_URL_BASE = 'https://taxi-owo8.onrender.com'  # Замените на свой домен
+WEBHOOK_URL_PATH = f'/{clean_token}/'
 
-@app.route('/', methods=['GET'])
+@app.route('/')
 def index():
     return "Бот запущен и готов к работе!"
 
-@app.route(WEBHOOK_URL_PATH, methods=['POST', 'GET'])
+@app.route(WEBHOOK_URL_PATH, methods=['POST'])
 def webhook():
-    if request.method == 'POST':
-        if request.headers.get('content-type') == 'application/json':
-            json_string = request.get_data().decode('utf-8')
-            update = telebot.types.Update.de_json(json_string)
-            bot.process_new_updates([update])
-            return '', 200
-        else:
-            abort(403)
+    print("Получен запрос webhook")
+    if request.headers.get('content-type') == 'application/json':
+        json_string = request.get_data().decode('utf-8')
+        print("Полученные данные:", json_string)
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        print("Обновление обработано")
+        return '', 200
     else:
-        # Для GET-запроса просто отвечаем 200 без обработки
-        return "Webhook работает!", 200
+        print("Ошибка: контент не json")
+        abort(403)
 
-# Обработчик команды /start
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
+    print(f"Команда /start от пользователя {message.from_user.id}")
     markup = InlineKeyboardMarkup()
-    web_app_url = "https://findly-bird.vercel.app/"  # Замените на свой URL
+    web_app_url = "https://your-web-app-url.com"  # Замените на URL вашего веб-приложения
 
     web_app_button = InlineKeyboardButton(
-        text="PLAY🕹️",
+        text="Открыть веб-приложение",
         web_app=WebAppInfo(url=web_app_url)
     )
     markup.add(web_app_button)
 
-    bot.send_message(message.chat.id, "Привет!:", reply_markup=markup)
+    bot.send_message(
+        message.chat.id,
+        "Привет! Я бот на вебхуках! Вот кнопка для открытия веб-приложения:",
+        reply_markup=markup
+    )
 
-# Обработчик нажатия других кнопок
 @bot.callback_query_handler(func=lambda call: call.data == "button_click")
 def callback_button(call):
+    print(f"Нажата кнопка от пользователя {call.from_user.id}")
     bot.answer_callback_query(call.id, "Ты нажал кнопку!")
     bot.send_message(call.message.chat.id, "Спасибо за нажатие!")
 
 if __name__ == '__main__':
     print("Удаляю старый вебхук...")
     bot.remove_webhook()
-    print("Устанавливаю новый вебхук...")
-    success = bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH)
+    full_webhook_url = WEBHOOK_URL_BASE + WEBHOOK_URL_PATH
+    print(f"Устанавливаю новый вебхук на {full_webhook_url}...")
+    success = bot.set_webhook(url=full_webhook_url)
     if success:
         print("Вебхук успешно установлен.")
     else:
