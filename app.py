@@ -11,7 +11,7 @@ bot = telebot.TeleBot(API_TOKEN)
 app = Flask(__name__)
 
 clean_token = API_TOKEN.replace(':', '')
-WEBHOOK_URL_BASE = 'https://taxi-w5ww.onrender.com' #ОБЯЗАТЕЛЬНО проверьте!
+WEBHOOK_URL_BASE = 'https://taxi-w5ww.onrender.com'  # ОБЯЗАТЕЛЬНО проверьте!
 WEBHOOK_URL_PATH = f"/{clean_token}/"
 
 @app.route('/', methods=['GET'])
@@ -31,7 +31,7 @@ def webhook():
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     markup = InlineKeyboardMarkup()
-    web_app_url = "https://findly-bird.vercel.app/"
+    web_app_url = "https://cats-two-ivory.vercel.app/"
 
     web_app_button = InlineKeyboardButton(
         text="PLAY🕹️",
