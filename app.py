@@ -43,7 +43,7 @@ def send_welcome(message):
     )
     
     order_button = InlineKeyboardButton(
-        text="BOTDA TAXI CHAQIRISH 🚕",
+        text="TAXI CHAQIRISH 🚕",
         callback_data="order_taxi"
     )
 
