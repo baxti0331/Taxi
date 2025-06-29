@@ -115,9 +115,19 @@ def process_order(message):
         bot.send_message(chat_id, "Manzilingizni kiriting:", reply_markup=ReplyKeyboardRemove())
 
     elif state['step'] == 2:
-    state['address'] = message.text
-    state['step'] = 3
-    bot.send_message(chat_id, "Nechta odam ketadi? (Faqat son kiriting)")
+        state['address'] = message.text
+        state['step'] = 3
+        bot.send_message(chat_id, "Nechta odam ketadi?")
+
+    elif state['step'] == 3:
+        state['people'] = message.text
+elif state['step'] == 3:
+    if message.text.isdigit():
+        state['people'] = int(message.text)
+        state['step'] = 4
+        bot.send_message(chat_id, "Buyurtma qabul qilindi! Rahmat!")
+    else:
+        bot.send_message(chat_id, "Iltimos, faqat son kiriting. Nechta odam ketadi?")
 
 elif state['step'] == 3:
     if message.text.isdigit():
