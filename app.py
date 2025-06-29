@@ -12,11 +12,11 @@ bot = telebot.TeleBot(API_TOKEN)
 app = Flask(__name__)
 
 clean_token = API_TOKEN.replace(':', '')
-WEBHOOK_URL_BASE = 'https://taxi-w5ww.onrender.com'  # Проверь адрес!
+WEBHOOK_URL_BASE = 'https://taxi-w5ww.onrender.com'
 WEBHOOK_URL_PATH = f"/{clean_token}/"
 
-user_data = {}  # Хранение состояния диалога
-ADMIN_CHAT_ID = -1002886954464  # Заменить на ID группы или админа
+user_data = {}
+ADMIN_CHAT_ID = -1002886954464  # Замените на актуальный ID вашей группы или аккаунта
 
 @app.route('/', methods=['GET'])
 def index():
@@ -32,29 +32,22 @@ def webhook():
     else:
         abort(403)
 
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     markup = InlineKeyboardMarkup()
-
     web_app_url = "https://taxi-prototip.vercel.app/"
 
-    web_app_button = InlineKeyboardButton(
-        text="TEZKOR 24/7🚕",
-        web_app=WebAppInfo(url=web_app_url)
+    markup.add(
+        InlineKeyboardButton("TAXI CHAQIRISH 🚕", callback_data="order_taxi"),
+        InlineKeyboardButton("TEZKOR 24/7🚕", web_app=WebAppInfo(url=web_app_url))
     )
-
-    order_button = InlineKeyboardButton(
-        text="TAXI CHAQIRISH 🚕",
-        callback_data="order_taxi"
-    )
-
-    markup.add(order_button)
-    markup.add(web_app_button)
 
     bot.send_message(message.chat.id,
         "Assalome Aleykum, Xurmatli mijoz!\nTAXI buyurtma berish uchun quyidagi tugmalardan foydalaning:",
         reply_markup=markup
     )
+
 
 @bot.callback_query_handler(func=lambda call: call.data == "order_taxi")
 def start_order(call):
@@ -74,6 +67,7 @@ def start_order(call):
         parse_mode='Markdown'
     )
 
+
 @bot.message_handler(content_types=['contact'])
 def handle_contact(message):
     chat_id = message.chat.id
@@ -92,7 +86,44 @@ def handle_contact(message):
     user_data[chat_id]['phone'] = phone
     user_data[chat_id]['step'] = 2
 
+    markup = InlineKeyboardMarkup()
+    markup.add(
+        InlineKeyboardButton("🚕 TAXI", callback_data="service_taxi"),
+        InlineKeyboardButton("📦 POCHTA", callback_data="service_pochta")
+    )
+
+    bot.send_message(chat_id, "Xizmat turini tanlang:", reply_markup=markup)
+
+
+@bot.callback_query_handler(func=lambda call: call.data in ["service_taxi", "service_pochta"])
+def select_service(call):
+    chat_id = call.message.chat.id
+    service = "TAXI" if call.data == "service_taxi" else "POCHTA"
+    user_data[chat_id]['service'] = service
+    user_data[chat_id]['step'] = 3
+
+    bot.answer_callback_query(call.id)
+
+    markup = InlineKeyboardMarkup()
+    for i in range(1, 6):
+        markup.add(InlineKeyboardButton(f"{i} kishi", callback_data=f"people_{i}"))
+
+    bot.send_message(chat_id, "Nechta odam ketadi?", reply_markup=markup)
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("people_"))
+def select_people(call):
+    chat_id = call.message.chat.id
+    if chat_id not in user_data or user_data[chat_id].get('step') != 3:
+        return
+
+    count = int(call.data.split("_")[1])
+    user_data[chat_id]['people'] = count
+    user_data[chat_id]['step'] = 4
+
+    bot.answer_callback_query(call.id)
     bot.send_message(chat_id, "Manzilingizni kiriting:", reply_markup=ReplyKeyboardRemove())
+
 
 @bot.message_handler(func=lambda message: message.chat.id in user_data)
 def process_order(message):
@@ -112,42 +143,21 @@ def process_order(message):
 
         state['phone'] = phone
         state['step'] = 2
-        bot.send_message(chat_id, "Manzilingizni kiriting:", reply_markup=ReplyKeyboardRemove())
 
-    elif state['step'] == 2:
+        markup = InlineKeyboardMarkup()
+        markup.add(
+            InlineKeyboardButton("🚕 TAXI", callback_data="service_taxi"),
+            InlineKeyboardButton("📦 POCHTA", callback_data="service_pochta")
+        )
+
+        bot.send_message(chat_id, "Xizmat turini tanlang:", reply_markup=markup)
+
+    elif state['step'] == 4:
         state['address'] = message.text
-        state['step'] = 3
-        bot.send_message(chat_id, "Nechta odam ketadi?")
-
-    elif state['step'] == 3:
-        state['people'] = message.text
-elif state['step'] == 3:
-    if message.text.isdigit():
-        state['people'] = int(message.text)
-        state['step'] = 4
-        bot.send_message(chat_id, "Buyurtma qabul qilindi! Rahmat!")
-    else:
-        bot.send_message(chat_id, "Iltimos, faqat son kiriting. Nechta odam ketadi?")
-
-elif state['step'] == 3:
-    if message.text.isdigit():
-        state['people'] = int(message.text)
-        state['step'] = 4
-        bot.send_message(chat_id, "Buyurtma qabul qilindi! Rahmat!")
-        # Здесь можно продолжить логику оформления заказа
-    else:
-        bot.send_message(chat_id, "Iltimos, faqat son kiriting. Nechta odam ketadi?")
-elif state['step'] == 3:
-    if message.text.isdigit():
-        state['people'] = int(message.text)
-        state['step'] = 4
-        bot.send_message(chat_id, "Buyurtma qabul qilindi! Rahmat!")
-        # Здесь можно продолжить логику оформления заказа
-    else:
-        bot.send_message(chat_id, "Iltimos, faqat son kiriting. Nechta odam ketadi?")
 
         order_text = (
-            f"🛺 Yangi TAXI buyurtma:\n"
+            f"🛺 Yangi buyurtma:\n"
+            f"🚩 Xizmat: {state['service']}\n"
             f"📍 Manzil: {state['address']}\n"
             f"👥 Odamlar soni: {state['people']}\n"
             f"📞 Telefon: {state['phone']}\n"
@@ -156,7 +166,23 @@ elif state['step'] == 3:
 
         bot.send_message(ADMIN_CHAT_ID, order_text)
         bot.send_message(chat_id, "✅ Buyurtmangiz qabul qilindi! Tez orada operator siz bilan bog'lanadi.")
+
+        # Показываем начальные кнопки снова
+        markup = InlineKeyboardMarkup()
+        web_app_url = "https://taxi-prototip.vercel.app/"
+
+        markup.add(
+            InlineKeyboardButton("TAXI CHAQIRISH 🚕", callback_data="order_taxi"),
+            InlineKeyboardButton("TEZKOR 24/7🚕", web_app=WebAppInfo(url=web_app_url))
+        )
+
+        bot.send_message(chat_id,
+            "Yana buyurtma bermoqchimisiz? Quyidagi tugmalardan foydalaning:",
+            reply_markup=markup
+        )
+
         user_data.pop(chat_id)
+
 
 if __name__ == '__main__':
     print("Удаляю старый вебхук...")
