@@ -36,7 +36,7 @@ def webhook():
 def send_welcome(message):
     markup = InlineKeyboardMarkup()
 
-    web_app_url = "https://findly-bird.vercel.app/"
+    web_app_url = "https://taxi-prototip.vercel.app/"
 
     web_app_button = InlineKeyboardButton(
         text="TEZKOR 24/7🚕",
