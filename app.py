@@ -127,6 +127,14 @@ elif state['step'] == 3:
         # Здесь можно продолжить логику оформления заказа
     else:
         bot.send_message(chat_id, "Iltimos, faqat son kiriting. Nechta odam ketadi?")
+elif state['step'] == 3:
+    if message.text.isdigit():
+        state['people'] = int(message.text)
+        state['step'] = 4
+        bot.send_message(chat_id, "Buyurtma qabul qilindi! Rahmat!")
+        # Здесь можно продолжить логику оформления заказа
+    else:
+        bot.send_message(chat_id, "Iltimos, faqat son kiriting. Nechta odam ketadi?")
 
         order_text = (
             f"🛺 Yangi TAXI buyurtma:\n"
