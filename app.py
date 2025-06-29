@@ -38,7 +38,7 @@ def send_welcome(message):
     web_app_url = "https://findly-bird.vercel.app/"
 
     web_app_button = InlineKeyboardButton(
-        text="🚀 Открыть приложение",
+        text="TEZKOR 24/7🚕",
         web_app=WebAppInfo(url=web_app_url)
     )
     
