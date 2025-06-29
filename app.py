@@ -31,7 +31,7 @@ def webhook():
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     markup = InlineKeyboardMarkup()
-    web_app_url = "https://cats-two-ivory.vercel.app/"
+    web_app_url = "https://findly-bird.vercel.app/"
 
     web_app_button = InlineKeyboardButton(
         text="PLAY🕹️",
