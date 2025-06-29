@@ -16,7 +16,7 @@ WEBHOOK_URL_BASE = 'https://taxi-w5ww.onrender.com'
 WEBHOOK_URL_PATH = f"/{clean_token}/"
 
 user_data = {}
-ADMIN_CHAT_ID = -1002886954464  # Замените на актуальный ID вашей группы или аккаунта
+ADMIN_CHAT_ID = -1002886954464  # Замените на свой ID
 
 @app.route('/', methods=['GET'])
 def index():
@@ -100,15 +100,21 @@ def select_service(call):
     chat_id = call.message.chat.id
     service = "TAXI" if call.data == "service_taxi" else "POCHTA"
     user_data[chat_id]['service'] = service
-    user_data[chat_id]['step'] = 3
 
     bot.answer_callback_query(call.id)
 
-    markup = InlineKeyboardMarkup()
-    for i in range(1, 6):
-        markup.add(InlineKeyboardButton(f"{i} kishi", callback_data=f"people_{i}"))
+    if service == "TAXI":
+        user_data[chat_id]['step'] = 3
 
-    bot.send_message(chat_id, "Nechta odam ketadi?", reply_markup=markup)
+        markup = InlineKeyboardMarkup()
+        for i in range(1, 6):
+            markup.add(InlineKeyboardButton(f"{i} kishi", callback_data=f"people_{i}"))
+
+        bot.send_message(chat_id, "Nechta odam ketadi?", reply_markup=markup)
+
+    else:  # POCHTA
+        user_data[chat_id]['step'] = 4
+        bot.send_message(chat_id, "Manzilingizni kiriting:", reply_markup=ReplyKeyboardRemove())
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("people_"))
@@ -159,15 +165,16 @@ def process_order(message):
             f"🛺 Yangi buyurtma:\n"
             f"🚩 Xizmat: {state['service']}\n"
             f"📍 Manzil: {state['address']}\n"
-            f"👥 Odamlar soni: {state['people']}\n"
             f"📞 Telefon: {state['phone']}\n"
             f"💬 Foydalanuvchi: @{message.from_user.username or message.from_user.first_name}"
         )
 
+        if state['service'] == "TAXI":
+            order_text += f"\n👥 Odamlar soni: {state['people']}"
+
         bot.send_message(ADMIN_CHAT_ID, order_text)
         bot.send_message(chat_id, "✅ Buyurtmangiz qabul qilindi! Tez orada operator siz bilan bog'lanadi.")
 
-        # Показываем начальные кнопки снова
         markup = InlineKeyboardMarkup()
         web_app_url = "https://taxi-prototip.vercel.app/"
 
