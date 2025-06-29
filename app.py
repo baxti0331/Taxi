@@ -11,8 +11,11 @@ bot = telebot.TeleBot(API_TOKEN)
 app = Flask(__name__)
 
 clean_token = API_TOKEN.replace(':', '')
-WEBHOOK_URL_BASE = 'https://taxi-w5ww.onrender.com'  # ОБЯЗАТЕЛЬНО проверьте!
+WEBHOOK_URL_BASE = 'https://taxi-w5ww.onrender.com'  # Проверь адрес!
 WEBHOOK_URL_PATH = f"/{clean_token}/"
+
+user_data = {}  # Хранение состояния диалога
+ADMIN_CHAT_ID = -1001234567890  # Заменить на ID группы или админа
 
 @app.route('/', methods=['GET'])
 def index():
@@ -31,20 +34,61 @@ def webhook():
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     markup = InlineKeyboardMarkup()
+    
     web_app_url = "https://findly-bird.vercel.app/"
 
     web_app_button = InlineKeyboardButton(
-        text="PLAY🕹️",
+        text="🚀 Открыть приложение",
         web_app=WebAppInfo(url=web_app_url)
     )
+    
+    order_button = InlineKeyboardButton(
+        text="🚖 Заказать такси",
+        callback_data="order_taxi"
+    )
+
+    markup.add(order_button)
     markup.add(web_app_button)
 
-    bot.send_message(message.chat.id, "Assalome Aleykum Xurmatli mijoz TEZKOR TAXI Xizmatiga Xush Kelibsz TAXI Buyurtma Berish uchun Pastdagi tugmani bosing!:", reply_markup=markup)
+    bot.send_message(message.chat.id, 
+        "Assalome Aleykum, Xurmatli mijoz!\nTAXI buyurtma berish uchun quyidagi tugmalardan foydalaning:", 
+        reply_markup=markup
+    )
 
-@bot.callback_query_handler(func=lambda call: call.data == "button_click")
-def callback_button(call):
-    bot.answer_callback_query(call.id, "Ты нажал кнопку!")
-    bot.send_message(call.message.chat.id, "Спасибо за нажатие!")
+@bot.callback_query_handler(func=lambda call: call.data == "order_taxi")
+def start_order(call):
+    chat_id = call.message.chat.id
+    user_data[chat_id] = {'step': 1}
+    bot.answer_callback_query(call.id)
+    bot.send_message(chat_id, "Iltimos, manzilni kiriting:")
+
+@bot.message_handler(func=lambda message: message.chat.id in user_data)
+def process_order(message):
+    chat_id = message.chat.id
+    state = user_data.get(chat_id)
+
+    if state['step'] == 1:
+        state['address'] = message.text
+        state['step'] = 2
+        bot.send_message(chat_id, "Nechta odam ketadi?")
+    elif state['step'] == 2:
+        state['people'] = message.text
+        state['step'] = 3
+        bot.send_message(chat_id, "Telefon raqamingizni kiriting:")
+    elif state['step'] == 3:
+        state['phone'] = message.text
+
+        order_text = (
+            f"🛺 Yangi TAXI buyurtma:\n"
+            f"📍 Manzil: {state['address']}\n"
+            f"👥 Odamlar soni: {state['people']}\n"
+            f"📞 Telefon: {state['phone']}\n"
+            f"💬 Foydalanuvchi: @{message.from_user.username or message.from_user.first_name}"
+        )
+        
+        bot.send_message(ADMIN_CHAT_ID, order_text)
+        bot.send_message(chat_id, "✅ Buyurtmangiz qabul qilindi! Tez orada operator siz bilan bog'lanadi.")
+        user_data.pop(chat_id)
 
 if __name__ == '__main__':
     print("Удаляю старый вебхук...")
