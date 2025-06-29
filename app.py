@@ -15,7 +15,7 @@ WEBHOOK_URL_BASE = 'https://taxi-w5ww.onrender.com'  # Проверь адрес
 WEBHOOK_URL_PATH = f"/{clean_token}/"
 
 user_data = {}  # Хранение состояния диалога
-ADMIN_CHAT_ID = '7794270699'# Заменить на ID группы или админа
+ADMIN_CHAT_ID =  -1002886954464 # Заменить на ID группы или админа
 
 @app.route('/', methods=['GET'])
 def index():
