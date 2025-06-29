@@ -115,12 +115,18 @@ def process_order(message):
         bot.send_message(chat_id, "Manzilingizni kiriting:", reply_markup=ReplyKeyboardRemove())
 
     elif state['step'] == 2:
-        state['address'] = message.text
-        state['step'] = 3
-        bot.send_message(chat_id, "Nechta odam ketadi?")
+    state['address'] = message.text
+    state['step'] = 3
+    bot.send_message(chat_id, "Nechta odam ketadi? (Faqat son kiriting)")
 
-    elif state['step'] == 3:
-        state['people'] = message.text
+elif state['step'] == 3:
+    if message.text.isdigit():
+        state['people'] = int(message.text)
+        state['step'] = 4
+        bot.send_message(chat_id, "Buyurtma qabul qilindi! Rahmat!")
+        # Здесь можно продолжить логику оформления заказа
+    else:
+        bot.send_message(chat_id, "Iltimos, faqat son kiriting. Nechta odam ketadi?")
 
         order_text = (
             f"🛺 Yangi TAXI buyurtma:\n"
