@@ -44,7 +44,7 @@ def send_welcome(message):
     )
 
     bot.send_message(message.chat.id,
-        "Assalome Aleykum, Xurmatli mijoz!\nTAXI buyurtma berish uchun quyidagi tugmalardan foydalaning:",
+        "Assalomu Aleykum, Xurmatli mijoz!\nTAXI buyurtma berish uchun quyidagi tugmalardan foydalaning:",
         reply_markup=markup
     )
 
