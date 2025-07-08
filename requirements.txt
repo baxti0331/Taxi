@@ -1,3 +1,1 @@
-telebot
-flask
-gunicorn
+python-telegram-bot==20.3
